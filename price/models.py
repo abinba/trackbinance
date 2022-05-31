@@ -10,7 +10,7 @@ class Symbol(models.Model):
 
 class Price(models.Model):
     symbol = models.ForeignKey(Symbol, on_delete=models.CASCADE)
-    price = models.IntegerField(default=0)
+    price = models.FloatField(default=0.0)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

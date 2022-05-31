@@ -27,4 +27,12 @@ jobs:
         run: poetry run black . --check && poetry run flake8
 
       - name: Tests
-        run: poetry run pytest -s --junitxml=pytests.xml --cov-report xml --cov-report term --cov-branch --cov=price
+        env:
+          DEBUG: 1
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trackbinance
+          POSTGRES_PORT: 5432
+          POSTGRES_HOST: localhost
+        run: docker-compose run --rm trackbinance test

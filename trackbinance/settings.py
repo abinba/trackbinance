@@ -20,12 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-c2^s1y6f)z_-xwu)b&-62_jj(%7r@t^!fre!ud)wz6z@l2i8vo"
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "*",
+]
 
 
 # Application definition
@@ -40,6 +42,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_celery_beat",
     "django_celery_results",
+    "price",
+    "health_check",
+    "coverage",
 ]
 
 MIDDLEWARE = [
@@ -82,8 +87,8 @@ DATABASES = {
         "NAME": "trackbinance",
         "USER": os.getenv("POSTGRES_USER"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": int(os.getenv("POSTGRES_PORT")),
     }
 }
 
@@ -125,6 +130,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
+STATIC_ROOT = ""
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

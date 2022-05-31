@@ -1,0 +1,84 @@
+version: '3'
+
+services:
+  trackbinance:
+    build: .
+    networks:
+       - djangonetwork
+    ports:
+      - 8000:8000
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
+    command: ["web"]
+
+  db:
+    image: postgres:14.1-alpine
+    restart: always
+    networks:
+        - djangonetwork
+    env_file:
+      - ./.env.dev
+    ports:
+      - 5432:5432
+    volumes:
+      - .pgdata:/var/lib/postgresql/data
+    hostname: postgres
+
+  flower:
+    image: mher/flower
+    depends_on:
+      - redis
+    env_file:
+      - ./.env.dev
+    ports:
+      - 8888:8888
+
+  redis:
+    image: bitnami/redis:4.0
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+        - djangonetwork
+    ports:
+      - 6379:6379
+    volumes:
+      - ./tmp:/bitnami/redis/data
+
+  worker:
+    build: .
+    depends_on:
+      - redis
+      - db
+    links:
+      - db:db
+    networks:
+     - djangonetwork
+    restart: always
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - ./.env.dev
+    command: ["worker"]
+
+  worker_beat:
+    build: .
+    depends_on:
+      - redis
+      - db
+    links:
+      - db:db
+    networks:
+      - djangonetwork
+    restart: always
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - ./.env.dev
+    command: ["beat"]
+
+
+networks:
+    djangonetwork:
+        driver: bridge

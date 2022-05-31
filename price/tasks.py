@@ -1,13 +1,13 @@
-import logging
 from json import JSONDecodeError
-from typing import Optional
+import logging
 import requests
+from typing import Optional
 
 from celery import shared_task
 from celery.schedules import crontab
 
-from trackbinance import celery_app
 from price.models import Symbol, Price
+from trackbinance import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -40,17 +40,25 @@ def get_price_from_binance(symbol_name: str) -> Optional[float]:
 @shared_task
 def track_symbols_price():
     symbols = Symbol.objects.all()
+    logger.info(f"Retrieving prices for symbols: {symbols}")
+
     for symbol in symbols:
         price = get_price_from_binance(symbol.name)
+        logger.info(f"Price retrieved for symbol {symbol.name}: {price}")
+
         if not price:
             continue
+
         price_obj = Price(symbol=symbol, price=price)
         price_obj.save()
+        logger.info(f"Price saved for symbol {symbol.name}")
+
+    logger.info("Retrieving finished")
 
 
 celery_app.conf.beat_schedule = {
     "track_symbols_price": {
-        "task": "tasks.track_symbols_price",
+        "task": "price.tasks.track_symbols_price",
         "schedule": crontab(minute="*/5"),
     }
 }
